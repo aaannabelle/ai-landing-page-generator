@@ -78,6 +78,7 @@ http://localhost:5000
 ### 5. Run the frontend
 ```bash
 npm start
+npm run dev
 ```
 
 Open:
