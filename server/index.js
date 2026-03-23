@@ -7,8 +7,6 @@ import cors from "cors";
 
 console.log("API KEY:", process.env.OPENAI_API_KEY ? "LOADED ✅" : "MISSING ❌");
 
-
-
 const app = express();
 const PORT = 5000;
 
@@ -29,7 +27,7 @@ const generateFallback = (prompt) => ({
 
 // --- Generate Landing Page ---
 app.post("/api/generate", async (req, res) => {
-  const { input, sections } = req.body; // support sections from frontend
+  const { input, sections } = req.body;
   const sectionText =
     sections && sections.length > 0
       ? `Include sections: ${sections.join(", ")}.`
@@ -57,9 +55,6 @@ app.post("/api/generate", async (req, res) => {
         ],
       }),
     });
-
-    //const data = await response.json();
-    console.log("STATUS:", response.status);
 
     const text = await response.text();
     console.log("RAW RESPONSE TEXT:", text);
@@ -132,6 +127,39 @@ app.post("/api/refine", async (req, res) => {
   } catch (err) {
     console.error("AI refinement failed:", err);
     res.status(500).json(generateFallback(originalPrompt));
+  }
+});
+
+// --- Generate Logo ---
+app.post("/api/generate-logo", async (req, res) => {
+  const { brandName } = req.body;
+  if (!brandName) return res.status(400).json({ error: "No brand name provided" });
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        prompt: `Logo for a modern SaaS brand called "${brandName}", minimalistic, flat design, vector style`,
+        n: 1,
+        size: "256x256", // you can use 512x512 or 1024x1024 if you want higher res
+      }),
+    });
+
+    const data = await response.json();
+    const logoUrl = data?.data?.[0]?.url;
+
+    if (logoUrl) {
+      res.json({ logoUrl });
+    } else {
+      res.status(500).json({ error: "Logo generation failed" });
+    }
+  } catch (err) {
+    console.error("Logo generation error:", err);
+    res.status(500).json({ error: "Logo generation failed" });
   }
 });
 
