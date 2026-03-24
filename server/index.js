@@ -28,10 +28,7 @@ const generateFallback = (prompt) => ({
 // --- Generate Landing Page ---
 app.post("/api/generate", async (req, res) => {
   const { input, sections } = req.body;
-  const sectionText =
-    sections && sections.length > 0
-      ? `Include sections: ${sections.join(", ")}.`
-      : "";
+  const sectionText = sections?.length ? `Include sections: ${sections.join(", ")}.` : "";
 
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -57,8 +54,6 @@ app.post("/api/generate", async (req, res) => {
     });
 
     const text = await response.text();
-    console.log("RAW RESPONSE TEXT:", text);
-
     const data = JSON.parse(text);
 
     let parsedOutput = null;
@@ -70,10 +65,7 @@ app.post("/api/generate", async (req, res) => {
       parsedOutput = null;
     }
 
-    if (!parsedOutput) {
-      parsedOutput = generateFallback(input);
-    }
-
+    if (!parsedOutput) parsedOutput = generateFallback(input);
     res.json(parsedOutput);
   } catch (err) {
     console.error("AI request failed:", err);
@@ -87,7 +79,6 @@ app.post("/api/refine", async (req, res) => {
 
   try {
     const combinedPrompt = `${originalPrompt}. Refine with: ${refinement}`;
-
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -102,10 +93,7 @@ app.post("/api/refine", async (req, res) => {
             content:
               "Return ONLY valid JSON with: headline, subheadline, cta, features (3 items with title + description). Make it sound like a real SaaS product.",
           },
-          {
-            role: "user",
-            content: combinedPrompt,
-          },
+          { role: "user", content: combinedPrompt },
         ],
       }),
     });
@@ -122,7 +110,6 @@ app.post("/api/refine", async (req, res) => {
     }
 
     if (!parsedOutput) parsedOutput = generateFallback(originalPrompt);
-
     res.json(parsedOutput);
   } catch (err) {
     console.error("AI refinement failed:", err);
@@ -130,10 +117,10 @@ app.post("/api/refine", async (req, res) => {
   }
 });
 
-// --- Generate Logo ---
+// --- Generate Multiple Logos ---
 app.post("/api/generate-logo", async (req, res) => {
   const { brandName } = req.body;
-  if (!brandName) return res.status(400).json({ error: "No brand name provided" });
+  if (!brandName) return res.status(400).json({ error: "Brand name required" });
 
   try {
     const response = await fetch("https://api.openai.com/v1/images/generations", {
@@ -143,22 +130,31 @@ app.post("/api/generate-logo", async (req, res) => {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        prompt: `Logo for a modern SaaS brand called "${brandName}", minimalistic, flat design, vector style`,
-        n: 1,
-        size: "256x256", // you can use 512x512 or 1024x1024 if you want higher res
+        prompt: `Logo for: "${brandName}" in a modern, minimal style, transparent background`,
+        n: 3, // generate 3 logos
+        size: "512x512",
       }),
     });
 
     const data = await response.json();
-    const logoUrl = data?.data?.[0]?.url;
+    // DEBUG: log the full response
+    console.log("OpenAI logo response:", JSON.stringify(data, null, 2));
 
-    if (logoUrl) {
-      res.json({ logoUrl });
-    } else {
-      res.status(500).json({ error: "Logo generation failed" });
+    if (!data?.data || !Array.isArray(data.data)) {
+      return res.status(500).json({ error: "No logos returned from OpenAI" });
     }
+
+    const logoUrls = data.data
+      .map((item) => item.url)
+      .filter(Boolean);
+
+    if (logoUrls.length === 0) {
+      return res.status(500).json({ error: "Logo generation returned empty URLs" });
+    }
+
+    res.json({ logoUrls });
   } catch (err) {
-    console.error("Logo generation error:", err);
+    console.error("Logo generation failed:", err);
     res.status(500).json({ error: "Logo generation failed" });
   }
 });

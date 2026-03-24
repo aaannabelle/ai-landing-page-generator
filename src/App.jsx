@@ -9,7 +9,8 @@ export default function App() {
   const [showCode, setShowCode] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [logoUrl, setLogoUrl] = useState(null);
+  const [logoUrls, setLogoUrls] = useState([]);
+  const [selectedLogo, setSelectedLogo] = useState(null);
   const [sections, setSections] = useState({
     hero: true,
     features: true,
@@ -18,6 +19,7 @@ export default function App() {
   });
   const [darkTheme, setDarkTheme] = useState(false);
 
+  // Fallback in case AI fails
   const generateFallback = (prompt) => ({
     headline: `Revolutionise your ${prompt}`,
     subheadline: `Build and scale your ${prompt} with powerful, modern tools.`,
@@ -29,11 +31,11 @@ export default function App() {
     ],
   });
 
+  // --- Landing page generation ---
   const generateLanding = async () => {
     if (!input.trim()) return;
     setLoading(true);
     setError(null);
-
     try {
       const requests = [1, 2, 3].map(() =>
         fetch("http://localhost:5000/api/generate", {
@@ -45,17 +47,12 @@ export default function App() {
           }),
         }).then((res) => res.json())
       );
-
       const results = await Promise.all(requests);
       setOutputs(results);
       setHistory([{ prompt: input, outputs: results }, ...history]);
     } catch (err) {
       console.error(err);
-      const fallback = [
-        generateFallback(input),
-        generateFallback(input),
-        generateFallback(input),
-      ];
+      const fallback = [generateFallback(input), generateFallback(input), generateFallback(input)];
       setOutputs(fallback);
       setError("AI failed, using fallback.");
     } finally {
@@ -63,18 +60,17 @@ export default function App() {
     }
   };
 
+  // --- Refinement ---
   const refineLanding = async () => {
     if (!refinement.trim() || !input.trim()) return;
     setLoading(true);
     setError(null);
-
     try {
       const response = await fetch("http://localhost:5000/api/refine", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ originalPrompt: input, refinement }),
       });
-
       const data = await response.json();
       setOutputs([data]);
       setPreview(data);
@@ -88,22 +84,21 @@ export default function App() {
     }
   };
 
-  // --- AI Logo Generation ---
-  const generateLogo = async () => {
+  // --- AI Logo generation ---
+  const generateLogos = async () => {
     if (!input.trim()) return;
     setLoading(true);
     setError(null);
-
     try {
       const response = await fetch("http://localhost:5000/api/generate-logo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brandName: input }),
       });
-
       const data = await response.json();
-      if (data.logoUrl) {
-        setLogoUrl(data.logoUrl); // save the returned logo URL
+      if (data.logoUrls && data.logoUrls.length > 0) {
+        setLogoUrls(data.logoUrls);
+        setSelectedLogo(data.logoUrls[0]); // default select first
       } else {
         setError("Logo generation failed");
       }
@@ -115,29 +110,37 @@ export default function App() {
     }
   };
 
+  // --- Download logo helper ---
+  const downloadLogo = (url, filename) => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // --- Generate code ---
   const generateCode = (landing) => `
-  <section class="text-center p-16">
-    ${logoUrl ? `<img src="${logoUrl}" alt="Logo" class="h-24 w-auto mb-4 mx-auto"/>` : ""}
-    <h1 class="text-4xl font-bold">${landing.headline}</h1>
-    <p class="mt-4 text-lg">${landing.subheadline}</p>
-    <button class="mt-6 px-6 py-3 bg-orange-300 rounded-full">${landing.cta}</button>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-      ${(landing.features || [])
-        .map(
-          (f) => `<div class="p-6 bg-white rounded-xl shadow">
+    <section class="text-center p-16">
+      ${selectedLogo ? `<img src="${selectedLogo}" alt="Logo" class="h-24 w-auto mb-4 mx-auto"/>` : ""}
+      <h1 class="text-4xl font-bold">${landing.headline}</h1>
+      <p class="mt-4 text-lg">${landing.subheadline}</p>
+      <button class="mt-6 px-6 py-3 bg-orange-300 rounded-full">${landing.cta}</button>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+        ${(landing.features || []).map(f => `<div class="p-6 bg-white rounded-xl shadow">
           <h3 class="font-semibold text-lg">${f.title}</h3>
           <p class="text-sm text-gray-600">${f.description}</p>
-        </div>`
-        )
-        .join("")}
-    </div>
-  </section>
+        </div>`).join("")}
+      </div>
+    </section>
   `;
 
   const copyCode = () => navigator.clipboard.writeText(generateCode(preview));
 
   return (
-    <div className={`${darkTheme ? "dark-theme" : ""} min-h-screen font-sans flex flex-col items-center p-6 bg-cover bg-center`} style={{ backgroundImage: "url('https://static.vecteezy.com/system/resources/thumbnails/047/121/034/small_2x/delicate-nude-background-abstract-blurred-pastel-color-banner-minimalist-aesthetic-design-vector.jpg')" }}>
+    <div className={`${darkTheme ? "dark-theme" : ""} min-h-screen font-sans flex flex-col items-center p-6 bg-cover bg-center`}
+      style={{ backgroundImage: "url('https://static.vecteezy.com/system/resources/thumbnails/047/121/034/small_2x/delicate-nude-background-abstract-blurred-pastel-color-banner-minimalist-aesthetic-design-vector.jpg')" }}>
       
       {/* Header */}
       <div className="mb-20 text-center max-w-3xl">
@@ -150,7 +153,7 @@ export default function App() {
         </p>
       </div>
 
-      {/* Generate + Refine + Logo Buttons */}
+      {/* Generate / Refine / Logos */}
       <div className="w-full max-w-2xl flex flex-col md:flex-row gap-4 mb-4">
         <input
           className="flex-1 p-4 rounded-xl border border-gray-200 shadow-sm bg-white"
@@ -166,11 +169,11 @@ export default function App() {
           {loading ? "Generating..." : "Generate"}
         </button>
         <button
-          onClick={() => generateLogo(input)}
+          onClick={generateLogos}
           disabled={loading || !input.trim()}
           className="px-6 py-3 rounded-xl font-semibold bg-green-400 hover:bg-green-500 transition"
         >
-          {loading ? "Generating Logo..." : "Generate Logo"}
+          {loading ? "Generating Logos..." : "Generate Logos"}
         </button>
       </div>
 
@@ -190,10 +193,30 @@ export default function App() {
         </button>
       </div>
 
-      {logoUrl && (
+      {/* Logo Selection */}
+      {logoUrls.length > 0 && (
         <div className="my-6 text-center">
-          <h2 className="text-lg font-semibold mb-2">Generated Logo:</h2>
-          <img src={logoUrl} alt="Generated Logo" className="mx-auto w-48 h-48 object-contain rounded-lg shadow" />
+          <h2 className="text-lg font-semibold mb-2">Generated Logos: Pick your favorite</h2>
+          <div className="flex justify-center gap-4 flex-wrap">
+            {logoUrls.map((url, idx) => (
+              <div key={idx} className="flex flex-col items-center">
+                <img
+                  src={url}
+                  alt={`Logo ${idx + 1}`}
+                  className={`w-48 h-48 object-contain rounded-lg shadow-md cursor-pointer transition transform hover:scale-105 ${
+                    selectedLogo === url ? "border-4 border-orange-400 shadow-xl scale-110" : "border-2 border-gray-200"
+                  }`}
+                  onClick={() => setSelectedLogo(url)}
+                />
+                <button
+                  className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm transition"
+                  onClick={() => downloadLogo(url, `logo-${idx + 1}.png`)}
+                >
+                  Download
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -260,17 +283,14 @@ export default function App() {
             </>
           ) : (
             <div className="max-w-6xl mx-auto rounded-3xl shadow-xl overflow-hidden">
-              {/* Hero */}
               {sections.hero && (
                 <section className="bg-white p-16 text-center rounded-b-3xl flex flex-col items-center shadow-inner">
-                  {logoUrl && <img src={logoUrl} alt="Brand Logo" className="h-24 w-auto mb-6 mx-auto" />}
+                  {selectedLogo && <img src={selectedLogo} alt="Brand Logo" className="h-24 w-auto mb-6 mx-auto" />}
                   <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight text-gray-900">{preview.headline}</h1>
                   <p className="text-lg md:text-xl mb-6 max-w-2xl text-gray-600">{preview.subheadline}</p>
                   <button className="bg-orange-300 text-gray-800 px-8 py-4 rounded-full font-semibold hover:bg-orange-400 transition transform hover:scale-105 mb-6">{preview.cta}</button>
                 </section>
               )}
-
-              {/* Features */}
               {sections.features && (
                 <section className="p-12 grid grid-cols-1 md:grid-cols-3 gap-8 bg-gray-50">
                   {(preview.features || []).map((feature, idx) => (
