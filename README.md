@@ -6,7 +6,7 @@ Create landing page headlines, subheadings, CTAs, and feature sections — then 
 
 This project demonstrates a **modern, minimal, and professional UI** with a clean but playful peach/white theme and responsive layout.
 
-> ⚠️ Note: AI integration is partially implemented. The current version uses structured fallback generation, with AI support in progress.
+> ⚠️ Note: this is an ongoing project!
 
 ---
 
