@@ -12,6 +12,8 @@ This project demonstrates a **modern, minimal, and professional UI** with a clea
 
 ## Overview
 
+> This project was designed and developed in a rapid iteration cycle (~1-2 days) to demonstrate AI-assisted UI workflows and fast prototyping. The focus was on functional AI integrations, end-to-end user flow and clean, modular React + Tailwind structure. Further iterations would refine UI spacing, responsiveness and component polish.
+
 This project demonstrates a AI-native design workflow: you don’t just mock up pages — you generate them with AI, fully coded in React + Tailwind CSS. Perfect for rapid prototyping, brand exploration, or automated landing page generation.
 
 Key highlights:
