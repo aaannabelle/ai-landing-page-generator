@@ -16,27 +16,29 @@ This project demonstrates a AI-native design workflow: you don’t just mock up 
 
 Key highlights:
 
-- AI-Powered Content & Visuals – Landing page content is generated from prompts; logos and branding can be AI-customized.
+- AI-Powered Content & Visuals – Generate landing page content and multiple logo variations from a single prompt.
+- Logo Selection & Download – Preview multiple logos, pick your favorite, and download it instantly.
 - Live Preview & Interactivity – See your page instantly with dynamic updates and reusable components.
 - Component-Based Design System – Tailwind-based buttons, cards, and forms structured for scalability.
-- Rapid Iteration – Generate multiple landing pages in seconds with a single input.
+- Rapid Iteration – Generate multiple landing pages in seconds with one input.
 
 ---
 
 ## Features
 
 - Generate SaaS landing pages based on your idea
-- Componentized design for fast iteration and style consistency.
-- Headlines, subheadings, CTAs, and feature sections  
-- Live preview of generated landing pages  
-- Export HTML code for plug-and-play use  
-- Prompt history to track previous ideas  
+- Generate **multiple logos** for branding and pick your favorite
+- Componentized design for fast iteration and style consistency
+- Headlines, subheadings, CTAs, and feature sections
+- Live preview of generated landing pages
+- Export HTML code for plug-and-play use
+- Prompt history to track previous ideas
 - Fallback generator if AI fails  
 
 ![alt text](image.png)
+![alt text](image-3.png)
 ![alt text](image-1.png)
 ![alt text](image-2.png)
-![alt text](image-3.png)
 
 ---
 
@@ -108,13 +110,15 @@ http://localhost:5173
 
 ## Usage
 
-1. Enter your SaaS idea  
-2. Click **Generate**  
-3. Preview different landing page variations
-4. Enter refinement and click **Refine**
-5. Click **View Code** to see HTML + Tailwind
-6. Copy and use in your own project  
-7. View past prompts in **Prompt History**  
+1. Enter your SaaS idea
+2. Click Generate to create multiple landing page variations
+3. Click Generate Logos to get 3 AI-generated logos
+4. Select your favorite logo by clicking it
+- Optionally, download any logo using the Download button
+5. Enter refinement text and click Refine to tweak your landing page
+6. Click View Code to see HTML + Tailwind code
+7. Copy and use the code in your own project
+8. View past prompts in Prompt History 
 
 ---
 
@@ -123,6 +127,7 @@ http://localhost:5173
 - **Theme & colors** → Edit Tailwind classes  
 - **Background image** → Replace `backgroundImage` in `App.jsx`  
 - **Features** → Modify fallback or AI response structure  
+- **Logo behavior** → Adjust default selection or styling in `App.jsx`
 
 ---
 
@@ -142,13 +147,12 @@ MIT License — free to use, modify, and share.
 
 ## Next Steps
 
-- Add custom hero images  
-- Generate multiple logo variations and apply auto color palettes
-- Integrate real icons / illustrations  
+- Add custom hero images
 - Add interactive micro-animations for better engagement
-- Deploy to Vercel or Netlify  
-- Export React/Tailwind components  
-- Expand component library for fully scalable design system
+- Integrate real icons / illustrations
+- Export React/Tailwind components
+- Deploy to Vercel or Netlify
+- Expand component library for a fully scalable design system
 
 ---
 
